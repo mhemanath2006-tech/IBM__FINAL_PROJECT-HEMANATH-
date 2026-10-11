@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% block title %}Sessions{% endblock %}
+{% block content %}
+<h1>Attendance sessions</h1>
+<div class="card"><h2>Start today's attendance ({{ today }})</h2>
+{% if sections %}
+<form method="post" action="{{ url_for('teacher_start') }}" class="grid g2"><input type="hidden" name="csrf" value="{{ csrf_token() }}">
+<div><label>Section</label><select name="section">{% for s in sections %}<option>{{ s }}</option>{% endfor %}</select></div>
+<div><label>Open for (minutes)</label><input type="number" name="open_minutes" value="30" min="5" max="240"></div>
+<div><label>Counts as late after (minutes)</label><input type="number" name="late_minutes" value="10" min="1" max="240"></div>
+<div style="align-self:end"><button>Start now</button></div></form>
+<p class="mute">Students scan their own face from the "My attendance" page. One session per section per day.</p>
+{% else %}<p>No students yet. The admin needs to add students first.</p>{% endif %}</div>
+<div class="card"><h2>Recent sessions</h2>
+{% if sessions %}<div class="tablewrap"><table><tr><th>Date</th><th>Section</th><th>State</th><th>Marked</th><th></th></tr>
+{% for s in sessions %}<tr><td>{{ s.day }}</td><td>{{ s.section }}</td><td><span class="pill {{ s.state }}">{{ s.state }}</span></td><td>{{ s.count }}</td><td><a class="btn sm ghost" href="{{ url_for('teacher_session', sid=s.id) }}">Open</a></td></tr>{% endfor %}</table></div>
+{% else %}<p class="mute">Nothing yet.</p>{% endif %}</div>
+{% endblock %}

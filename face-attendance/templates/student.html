@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% block title %}My attendance{% endblock %}
+{% block content %}
+<h1>Hello, {{ user.name }}</h1>
+<div class="card"><h2>Today</h2>
+{% if not user.section %}<p>You have no section assigned yet. Ask the admin.</p>
+{% elif not s %}<p class="mute">Your teacher has not opened attendance today.</p>
+{% elif mine %}<p>Marked <span class="pill {{ mine.status }}">{{ mine.status }}</span> at {{ mine.marked_at[11:16] }}.</p>
+{% elif state == 'open' %}
+  {% if has_face %}<p>Attendance is open until {{ s.closes_at[11:16] }}.</p><a class="btn" href="{{ url_for('student_scan') }}">Scan my face</a>
+  {% else %}<p class="flash error">Your face is not registered yet. Ask the admin to register it.</p>{% endif %}
+{% else %}<p>Attendance for today is <span class="pill {{ state }}">{{ state }}</span>. If you were present, ask your teacher to mark you.</p>{% endif %}
+</div>
+{% if me and me.total %}
+<div class="card"><h2>Overall</h2><div class="stats">
+<div class="stat"><b {% if me.low %}class="danger"{% endif %}>{{ me.pct }}%</b><span>Attendance</span></div>
+<div class="stat"><b>{{ me.present }}</b><span>Present</span></div><div class="stat"><b>{{ me.late }}</b><span>Late</span></div><div class="stat"><b>{{ me.absent }}</b><span>Absent</span></div></div>
+{% if me.low %}<p class="flash error" style="margin-top:12px">Below {{ LOW_PCT|int }}%. Please talk to your teacher.</p>{% endif %}</div>{% endif %}
+<div class="card"><h2>History</h2>
+{% if history %}<div class="tablewrap"><table><tr><th>Date</th><th>Status</th><th>How</th><th>Time</th></tr>
+{% for h in history %}<tr><td>{{ h.day }}</td><td><span class="pill {{ h.status }}">{{ h.status }}</span></td><td>{{ h.method }}</td><td>{{ h.marked_at[11:16] }}</td></tr>{% endfor %}</table></div>
+{% else %}<p class="mute">No records yet.</p>{% endif %}</div>
+{% endblock %}

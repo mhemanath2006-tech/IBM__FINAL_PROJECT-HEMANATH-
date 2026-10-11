@@ -1,0 +1,37 @@
+{% extends "base.html" %}{% block title %}Scan{% endblock %}
+{% block content %}
+<h1>Mark attendance</h1>
+<div class="card">
+  <div class="camwrap"><video id="v" playsinline muted></video><div class="oval"></div><div class="cue" id="cue">Camera is off</div></div>
+  <div class="big" id="msg">Stay alone in the frame, in good light.</div>
+  <p class="row" style="justify-content:center"><button id="go">Start scan</button><a class="btn ghost" href="{{ url_for('student_home') }}">Back</a></p>
+</div>
+<script>window.CSRF = "{{ csrf_token() }}";</script>
+<script src="{{ url_for('static', filename='camera.js') }}"></script>
+<script>
+const v = document.getElementById("v"), cue = document.getElementById("cue"), msg = document.getElementById("msg"), go = document.getElementById("go");
+go.onclick = async () => {
+  go.disabled = true; msg.textContent = "Starting...";
+  const ch = await postJSON("/api/scan/challenge");
+  if (!ch.ok) { msg.textContent = ch.error; go.disabled = false; return; }
+  try { await Cam.start(v); } catch (e) { msg.textContent = cameraError(e); go.disabled = false; return; }
+  msg.textContent = "";
+  cue.textContent = "Look straight at the camera"; await Cam.sleep(2200);
+  const neutral = Cam.frame(v);
+  cue.textContent = "Now slowly turn your head to your " + ch.direction.toUpperCase();
+  await Cam.sleep(700);
+  const turns = [];
+  for (let i = 0; i < 9; i++) { turns.push(Cam.frame(v)); await Cam.sleep(400); }
+  cue.textContent = "Checking..."; Cam.stop();
+  const r = await postJSON("/api/scan/submit", { nonce: ch.nonce, neutral, turns });
+  if (r.ok) {
+    cue.textContent = "Done";
+    msg.innerHTML = "Marked <b>" + r.status.toUpperCase() + "</b> at " + r.time + ".";
+    go.style.display = "none";
+  } else {
+    cue.textContent = "Not marked"; msg.textContent = r.error || "Failed. Try again."; go.disabled = false;
+    if (r.debug) msg.textContent += " " + JSON.stringify(r.debug);
+  }
+};
+</script>
+{% endblock %}

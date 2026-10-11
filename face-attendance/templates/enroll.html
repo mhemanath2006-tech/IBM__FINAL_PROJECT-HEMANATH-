@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% block title %}Register face{% endblock %}
+{% block content %}
+<h1>Register face: {{ student.name }}</h1>
+<p class="mute">{{ student.roll_no or '' }} {{ student.section or '' }}. Only numeric face data is stored, not the photos.</p>
+<div class="card">
+  <div class="camwrap"><video id="v" playsinline muted></video><div class="oval"></div><div class="cue" id="cue">Camera is off</div></div>
+  <label class="chk"><input type="checkbox" id="consent"> The student has been told what is stored (face data only, used to mark attendance) and agrees.</label>
+  <div class="big" id="msg"></div>
+  <p class="row" style="justify-content:center"><button id="go">Start capture</button><a class="btn ghost" href="{{ url_for('admin_home') }}">Back</a></p>
+</div>
+<script>window.CSRF = "{{ csrf_token() }}";</script>
+<script src="{{ url_for('static', filename='camera.js') }}"></script>
+<script>
+const steps = ["Look straight at the camera", "Turn slightly to the left", "Turn slightly to the right",
+               "Look straight again", "Tilt your chin up a little", "Look straight and relax"];
+const v = document.getElementById("v"), cue = document.getElementById("cue"), msg = document.getElementById("msg"), go = document.getElementById("go");
+go.onclick = async () => {
+  if (!document.getElementById("consent").checked) { msg.textContent = "Tick the consent box first."; return; }
+  go.disabled = true; msg.textContent = "";
+  try { await Cam.start(v); } catch (e) { msg.textContent = cameraError(e); go.disabled = false; return; }
+  const frames = [];
+  for (const s of steps) {
+    cue.textContent = s; await Cam.sleep(1700); frames.push(Cam.frame(v));
+  }
+  cue.textContent = "Checking..."; Cam.stop();
+  const r = await postJSON("{{ url_for('api_enroll', uid=student.id) }}", { frames, consent: true });
+  if (r.ok) { msg.textContent = "Saved (" + r.saved + " good frames)."; cue.textContent = "Done"; go.textContent = "Capture again"; }
+  else { msg.textContent = r.error || "Failed."; cue.textContent = "Try again"; }
+  go.disabled = false;
+};
+</script>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}{% block title %}Users{% endblock %}
+{% block content %}
+<h1>Users</h1>
+<div class="grid g2">
+<div class="card"><h2>Add one person</h2>
+<form method="post" action="{{ url_for('admin_add_user') }}"><input type="hidden" name="csrf" value="{{ csrf_token() }}">
+<label>Role</label><select name="role"><option value="student">Student</option><option value="teacher">Teacher</option></select>
+<label>Full name</label><input name="name" required>
+<label>Roll number (students)</label><input name="roll_no">
+<label>Section / class (students)</label><input name="section" placeholder="e.g. CSE-A">
+<label>Username (blank = roll number)</label><input name="username">
+<label>Password (blank = generate one)</label><input name="password">
+<p><button>Create</button></p></form></div>
+<div class="card"><h2>Import many students</h2>
+<p class="mute">One per line: <b>name,roll_no,section</b></p>
+<form method="post" action="{{ url_for('admin_import') }}"><input type="hidden" name="csrf" value="{{ csrf_token() }}">
+<textarea name="csv" rows="9" placeholder="Asha Rao,21CS001,CSE-A&#10;Vikram Singh,21CS002,CSE-A"></textarea>
+<p><button>Import and show passwords</button></p></form></div>
+</div>
+<div class="card"><h2>Everyone</h2><div class="tablewrap"><table>
+<tr><th>Name</th><th>Role</th><th>Roll</th><th>Section</th><th>Username</th><th>Face</th><th></th></tr>
+{% for u in users %}<tr>
+<td>{{ u.name }}{% if not u.active %} <span class="pill none">inactive</span>{% endif %}</td><td>{{ u.role }}</td><td>{{ u.roll_no or '' }}</td><td>{{ u.section or '' }}</td><td>{{ u.username }}</td>
+<td>{% if u.role == 'student' %}{% if u.has_face %}<span class="pill present">registered</span>{% else %}<span class="pill absent">missing</span>{% endif %}{% endif %}</td>
+<td class="row">
+{% if u.role == 'student' %}<a class="btn sm ghost" href="{{ url_for('admin_enroll', uid=u.id) }}">{{ 'Re-capture' if u.has_face else 'Register face' }}</a>{% endif %}
+{% if u.has_face %}<form class="inline" method="post" action="{{ url_for('admin_face_delete', uid=u.id) }}" onsubmit="return confirm('Delete this face data?')"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="sm ghost danger">Delete face</button></form>{% endif %}
+<form class="inline" method="post" action="{{ url_for('admin_reset', uid=u.id) }}" onsubmit="return confirm('Generate a new password?')"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="sm ghost">Reset password</button></form>
+{% if u.id != user.id %}<form class="inline" method="post" action="{{ url_for('admin_toggle', uid=u.id) }}"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="sm ghost">{{ 'Deactivate' if u.active else 'Activate' }}</button></form>{% endif %}
+</td></tr>{% endfor %}</table></div></div>
+{% endblock %}

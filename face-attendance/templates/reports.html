@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% block title %}Reports{% endblock %}
+{% block content %}
+<h1>Reports</h1>
+<div class="card"><form method="get" class="grid g2">
+<div><label>Section</label><select name="section"><option value="">All</option>{% for s in sections %}<option {{ 'selected' if s == section }}>{{ s }}</option>{% endfor %}</select></div>
+<div><label>From</label><input type="date" name="from" value="{{ start }}"></div>
+<div><label>To</label><input type="date" name="to" value="{{ end }}"></div>
+<div style="align-self:end" class="row"><button>Show</button>
+<a class="btn ghost" href="{{ url_for('teacher_export', section=section, **{'from': start, 'to': end}) }}">Download Excel</a></div></form></div>
+<div class="card"><h2>{{ n_sessions }} finished session{{ '' if n_sessions == 1 else 's' }}</h2>
+<p class="mute">Rows in red are below {{ LOW_PCT|int }}%. Late counts as attended.</p>
+<div class="tablewrap"><table><tr><th>Roll</th><th>Name</th><th>Section</th><th>Classes</th><th>Present</th><th>Late</th><th>Absent</th><th>%</th></tr>
+{% for r in rows %}<tr class="{{ 'low' if r.low }}"><td>{{ r.roll_no or '' }}</td><td>{{ r.name }}</td><td>{{ r.section }}</td><td>{{ r.total }}</td><td>{{ r.present }}</td><td>{{ r.late }}</td><td>{{ r.absent }}</td>
+<td>{% if r.pct is none %}-{% else %}<b {% if r.low %}class="danger"{% endif %}>{{ r.pct }}%</b>{% endif %}</td></tr>{% endfor %}</table></div></div>
+{% endblock %}

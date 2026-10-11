@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}Face Attendance{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="top"><div class="in">
+  <span class="brand">Face Attendance</span>
+  {% if user %}
+    {% if user.role == 'admin' %}<a href="{{ url_for('admin_home') }}">Users</a>{% endif %}
+    {% if user.role in ('teacher','admin') %}<a href="{{ url_for('teacher_home') }}">Sessions</a><a href="{{ url_for('teacher_reports') }}">Reports</a>{% endif %}
+    {% if user.role == 'student' %}<a href="{{ url_for('student_home') }}">My attendance</a>{% endif %}
+    <a href="{{ url_for('change_password') }}">{{ user.name }}</a>
+    <form class="inline" method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="ghost sm">Log out</button></form>
+  {% endif %}
+</div></header>
+<main>
+{% for cat, msg in get_flashed_messages(with_categories=true) %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}
+{% block content %}{% endblock %}
+</main>
+</body>
+</html>
